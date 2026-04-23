@@ -20,6 +20,7 @@
   "homepage": "https://github.com/auPhippsCSUMB/mist#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "bootstrap": "^5.3.8",
     "dotenv": "^17.4.2",
     "ejs": "^5.0.2",
     "express": "^5.2.1",
