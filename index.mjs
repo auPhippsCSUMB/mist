@@ -33,6 +33,9 @@ app.get('/addGame', (req, res) => {
 app.get('/friendsWishlist', (req, res) => {
     res.render('friendsWishlist.ejs');
 });
+app.get('/aISearch', (req, res) => {
+    res.render('aISearch.ejs');
+});
 app.get("/dbTest", async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT CURDATE()");
