@@ -21,6 +21,18 @@ app.get('/', (req, res) => {
 app.get('/search', (req, res) => {
     res.render('search.ejs');
 });
+app.get('/signUp', (req, res) => {
+    res.render('signUp.ejs');
+});
+app.get('/addFriends', (req, res) => {
+    res.render('addFriends.ejs');
+});
+app.get('/addGame', (req, res) => {
+    res.render('addGame.ejs');
+});
+app.get('/friendsWishlist', (req, res) => {
+    res.render('friendsWishlist.ejs');
+});
 app.get("/dbTest", async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT CURDATE()");
