@@ -1,11 +1,32 @@
 import 'dotenv/config';
 import express from 'express';
 import mysql from 'mysql2/promise';
+import session from 'express-session';
+import bcrypt from 'bcrypt';
+
 const app = express();
+
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 //for Express to get values using the POST method
 app.use(express.urlencoded({ extended: true }));
+
+//setting sessions
+app.set('trust proxy', 1) // trust first proxy
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true
+    //   cookie: { secure: true }
+}))
+
+app.use((req, res, next) => {
+    res.locals.fullName = req.session.fullName;
+    console.log(req.url);
+    next(); //next middleware/route
+});
+
+
 //setting up database connection pool, replace values in red
 const pool = mysql.createPool({
     host: "x71wqc4m22j8e3ql.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
@@ -20,7 +41,41 @@ let token;
 
 //routes
 app.get('/', (req, res) => {
-    res.send('Hello Express app!')
+    res.render('login.ejs');
+});
+
+app.get('/home', isUserAuthenticated, (req, res) => {
+    res.render('home.ejs');
+});
+
+
+app.post('/loginProcess', async (req, res) => {
+    //    let username = req.body.username;
+    //    let password = req.body.password;
+    let { username, password } = req.body;
+    console.log(username + ": " + password);
+
+    let hashedPassword = "";
+
+    let sql = `SELECT *
+              FROM mistusers
+              WHERE username = ?`;
+    const [rows] = await pool.query(sql, [username]);
+
+    if (rows.length > 0) { //username was found in the database
+        hashedPassword = rows[0].password;
+    }
+
+    const match = await bcrypt.compare(password, hashedPassword);
+
+    if (match) {
+        req.session.authenticated = true;
+        req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
+        res.render('home.ejs', { "fullName": req.session.fullName });
+    } else {
+        let loginError = "Wrong Credentials! Try again!"
+        res.render('login.ejs', { loginError });
+    }
 });
 
 app.get('/apiTest', async (req, res) => {
@@ -60,15 +115,31 @@ app.get('/gameTest', async (req, res) => {
     res.send(game);
 });
 
-app.get("/dbTest", async (req, res) => {
-    try {
-        const [rows] = await pool.query("SELECT CURDATE()");
-        res.send(rows);
-    } catch (err) {
-        console.error("Database error:", err);
-        res.status(500).send("Database error!");
+app.get('/gameSearch', async (req, res) => {
+
+    let gameName = req.query.game;
+
+    let url = "https://api.igdb.com/v4/games";
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `search \"${gameName}\"; fields name;`
+    });
+
+    const game = await response.json();
+    console.log(game);
+    res.send(game);
+});
+
+
+function isUserAuthenticated(req, res, next) {
+    if (req.session.authenticated) {
+        next();
+    } else {
+        res.redirect("/");
     }
-});//dbTest
+}
+
 app.listen(3000, () => {
     console.log("Express server running")
 })
