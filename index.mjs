@@ -44,7 +44,18 @@ app.get('/', (req, res) => {
     res.render('login.ejs');
 });
 
-app.get('/home', isUserAuthenticated, (req, res) => {
+app.get('/home', isUserAuthenticated, async (req, res) => {
+    let url = "https://id.twitch.tv/oauth2/token";
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&grant_type=client_credentials`
+    });
+
+    const test = await response.json();
+    token = test.access_token;
+    console.log(test);
+
     res.render('home.ejs');
 });
 
@@ -71,31 +82,31 @@ app.post('/loginProcess', async (req, res) => {
     if (match) {
         req.session.authenticated = true;
         req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
-        res.render('home.ejs', { "fullName": req.session.fullName });
+        res.redirect("/home");
     } else {
         let loginError = "Wrong Credentials! Try again!"
         res.render('login.ejs', { loginError });
     }
 });
 
-app.get('/apiTest', async (req, res) => {
-    let client_id = "3zzzpcewhkvs4yvk9v2117i0xqqviq";
-    let client_secret = "nks9vjjfiq7g0ql2gyf6wjf4r29sry";
-    // grant_type = client_credentials
+// app.get('/apiTest', async (req, res) => {
+//     let client_id = "3zzzpcewhkvs4yvk9v2117i0xqqviq";
+//     let client_secret = "nks9vjjfiq7g0ql2gyf6wjf4r29sry";
+//     // grant_type = client_credentials
 
-    let url = "https://id.twitch.tv/oauth2/token";
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&grant_type=client_credentials`
-    });
+//     let url = "https://id.twitch.tv/oauth2/token";
+//     const response = await fetch(url, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+//         body: `client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&grant_type=client_credentials`
+//     });
 
-    const test = await response.json();
-    token = test.access_token;
-    console.log(test);
-    console.log('test' + test.toString());
-    res.render('apiTest.ejs', { test });
-});
+//     const test = await response.json();
+//     token = test.access_token;
+//     console.log(test);
+//     console.log('test' + test.toString());
+//     res.render('apiTest.ejs', { test });
+// });
 
 
 app.get('/gameTest', async (req, res) => {
@@ -123,11 +134,49 @@ app.get('/gameSearch', async (req, res) => {
     const response = await fetch(url, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `search \"${gameName}\"; fields name;`
+        body: `search \"${gameName}\"; fields name,cover,rating;`
     });
 
     const game = await response.json();
+
     console.log(game);
+
+    const firstGame = game[0];
+    const cover = firstGame.cover;
+    const id = JSON.stringify(firstGame.id);
+
+    // CODE THAT CAN BE USED FOR MORE GAME IMAGES LATER
+    // let urlPic = "https://api.igdb.com/v4/games";
+    // const responsePic = await fetch(urlPic, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `fields screenshots.*; where id = ${id};`
+    // });
+    
+    // const pics = await responsePic.json();
+    // console.log(JSON.stringify(pics));
+
+    let url2 = "https://api.igdb.com/v4/covers";
+    const response2 = await fetch(url2, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where game = ${id}; fields image_id;`
+    });
+
+    let finalCover = await response2.json();
+    finalCover = finalCover[0].image_id;
+    console.log(finalCover);
+
+    let img = `https://images.igdb.com/igdb/image/upload/t_cover_big/${finalCover}.jpg`;
+    console.log(img);
+
+    // let url3 = "https://api.igdb.com/v4/covers";
+    // const response2 = await fetch(url3, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `where game = ${id}; fields image_id;`
+    // });
+
     res.send(game);
 });
 
