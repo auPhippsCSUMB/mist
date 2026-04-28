@@ -7,10 +7,10 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 //setting up database connection pool, replace values in red
 const pool = mysql.createPool({
-    host: "your_hostname",
-    user: "your_username",
-    password: "your_password",
-    database: "your_database",
+    host: "x71wqc4m22j8e3ql.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
+    user: "raf75r08n7zd5356",
+    password: "zjcnac7j466tft93", //put into env file
+    database: "aim59v409g7thmo2",
     connectionLimit: 10,
     waitForConnections: true
 });
@@ -27,6 +27,6 @@ app.get("/dbTest", async (req, res) => {
         res.status(500).send("Database error!");
     }
 });//dbTest
-app.listen(3000, () => {
+app.listen(3002, () => {
     console.log("Express server running")
 })
