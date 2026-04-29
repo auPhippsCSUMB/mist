@@ -138,8 +138,14 @@ app.get('/gameSearch', async (req, res) => {
     });
 
     const game = await response.json();
+    let gameCovers = "";
 
+    for (let i = 0; i < game.length-1; i++) {
+        gameCovers = gameCovers + game[i].id + ",";
+    }
+    gameCovers = gameCovers + game[game.length-1].id;
     console.log(game);
+    console.log(gameCovers);
 
     const firstGame = game[0];
     const cover = firstGame.cover;
@@ -160,15 +166,20 @@ app.get('/gameSearch', async (req, res) => {
     const response2 = await fetch(url2, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `where game = ${id}; fields image_id;`
+        body: `where game = (${gameCovers}); fields image_id;`
     });
 
     let finalCover = await response2.json();
-    finalCover = finalCover[0].image_id;
     console.log(finalCover);
+    let finalCovers = [];
+    for (let i = 0; i < finalCover.length; i++) {
+        finalCovers.push(finalCover[i].image_id);
+        console.log(finalCover[i].image_id);
+    }
+    console.log(finalCovers);
 
-    let img = `https://images.igdb.com/igdb/image/upload/t_cover_big/${finalCover}.jpg`;
-    console.log(img);
+    // let img = `https://images.igdb.com/igdb/image/upload/t_cover_big/${finalCover}.jpg`;
+    // console.log(img);
 
     // let url3 = "https://api.igdb.com/v4/covers";
     // const response2 = await fetch(url3, {
@@ -177,7 +188,7 @@ app.get('/gameSearch', async (req, res) => {
     //     body: `where game = ${id}; fields image_id;`
     // });
 
-    res.send(game);
+    res.render('gameSearch.ejs', {game, finalCovers} );
 });
 
 
