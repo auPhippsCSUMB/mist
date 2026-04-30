@@ -54,15 +54,13 @@ app.get('/profile', (req, res) => {
     res.render('profile.ejs');
 });
 
-app.get("/dbTest", async (req, res) => {
-    try {
-        const [rows] = await pool.query("SELECT CURDATE()");
-        res.send(rows);
-    } catch (err) {
-        console.error("Database error:", err);
-        res.status(500).send("Database error!");
+function isUserAuthenticated(req, res, next) {
+    if (req.session.userAuthenticated) {
+        return next();
+    } else {
+        res.redirect('/');
     }
-});//dbTest
+}
 
 app.listen(3000, () => {
     console.log("Express server running on port 3000")

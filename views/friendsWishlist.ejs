@@ -1,4 +1,50 @@
 <%- include('partials/head', { title: 'Friends Wishlists' }) %>
-<h1 class="h3">Friends Wishlists</h1>
-<p class="text-muted">This is the Friends Wishlists page.</p>
+<div class="card soft-card mb-4">
+	<div class="card-body p-4">
+		<h1 class="h3 section-title mb-3">Friends' Wishlists</h1>
+		<form class="row g-3" method="get" action="/friendsWishlist">
+			<div class="col-md-8">
+				<label for="friend" class="form-label">Filter by friend</label>
+				<input type="text" class="form-control" id="friend" name="friend" placeholder="Type a username">
+			</div>
+			<div class="col-md-4 d-grid align-self-end">
+				<button class="btn btn-primary" type="submit">Apply Filter</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="accordion" id="wishlistAccordion">
+	<div class="accordion-item soft-card border-0 mb-3">
+		<h2 class="accordion-header">
+			<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#friendOne" aria-expanded="true" aria-controls="friendOne">
+				Alex's Wishlist
+			</button>
+		</h2>
+		<div id="friendOne" class="accordion-collapse collapse show" data-bs-parent="#wishlistAccordion">
+			<div class="accordion-body">
+				<ul class="mb-0">
+					<li>Moonfall Legacy</li>
+					<li>Turbo Derby X</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<div class="accordion-item soft-card border-0">
+		<h2 class="accordion-header">
+			<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#friendTwo" aria-expanded="false" aria-controls="friendTwo">
+				Sam's Wishlist
+			</button>
+		</h2>
+		<div id="friendTwo" class="accordion-collapse collapse" data-bs-parent="#wishlistAccordion">
+			<div class="accordion-body">
+				<ul class="mb-0">
+					<li>Galaxy Rangers</li>
+					<li>Forest Tactics</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
 <%- include('partials/footer') %>

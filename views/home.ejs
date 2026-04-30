@@ -1,4 +1,40 @@
 <%- include('partials/head', { title: 'MIST' }) %>
-<h1 class="h3">Home</h1>
-<p class="text-muted">This is the Home page.</p>
+<div class="card soft-card mb-4">
+	<div class="card-body p-4 p-md-5">
+		<h1 class="h2 section-title mb-2">Welcome to MIST</h1>
+		<p class="text-muted mb-4">Track your game wishlist, connect with friends, and discover new games together.</p>
+		<div class="d-flex flex-wrap gap-2">
+			<a href="/search" class="btn btn-primary">Search Games</a>
+			<a href="/addGame" class="btn btn-outline-primary">Add a Game</a>
+			<a href="/signUp" class="btn btn-outline-secondary">Create Account</a>
+		</div>
+	</div>
+</div>
+
+<div class="row g-3">
+	<div class="col-md-4">
+		<div class="card soft-card h-100">
+			<div class="card-body">
+				<h2 class="h5">Build Your Wishlist</h2>
+				<p class="text-muted mb-0">Save titles across PC, console, and mobile in one place.</p>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="card soft-card h-100">
+			<div class="card-body">
+				<h2 class="h5">Follow Friends</h2>
+				<p class="text-muted mb-0">See what your friends want to play next and compare interests.</p>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="card soft-card h-100">
+			<div class="card-body">
+				<h2 class="h5">Use AI Search</h2>
+				<p class="text-muted mb-0">Describe what you want, then get suggestions faster.</p>
+			</div>
+		</div>
+	</div>
+</div>
 <%- include('partials/footer') %>

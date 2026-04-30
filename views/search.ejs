@@ -1,4 +1,59 @@
 <%- include('partials/head', { title: 'Search' }) %>
-<h1 class="h3">Search</h1>
-<p class="text-muted">This is the Search page.</p>
+<div class="card soft-card mb-4">
+	<div class="card-body p-4">
+		<h1 class="h3 section-title mb-3">Search Games</h1>
+		<form class="row g-3" method="get" action="/search">
+			<div class="col-md-6">
+				<label for="query" class="form-label">Game title</label>
+				<input type="text" class="form-control" id="query" name="query" placeholder="e.g. Hollow Knight">
+			</div>
+			<div class="col-md-3">
+				<label for="platform" class="form-label">Platform</label>
+				<select class="form-select" id="platform" name="platform">
+					<option selected value="">Any</option>
+					<option>PC</option>
+					<option>PlayStation</option>
+					<option>Xbox</option>
+					<option>Nintendo</option>
+				</select>
+			</div>
+			<div class="col-md-3">
+				<label for="genre" class="form-label">Genre</label>
+				<select class="form-select" id="genre" name="genre">
+					<option selected value="">Any</option>
+					<option>Action</option>
+					<option>RPG</option>
+					<option>Adventure</option>
+					<option>Simulation</option>
+				</select>
+			</div>
+			<div class="col-12">
+				<button type="submit" class="btn btn-primary">Search</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="card soft-card">
+	<div class="card-body p-4">
+		<h2 class="h5 mb-3">Results</h2>
+		<div class="table-responsive">
+			<table class="table table-striped align-middle mb-0">
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th>Platform</th>
+						<th>Genre</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td colspan="4" class="text-muted">No results yet. Run a search to see games.</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
 <%- include('partials/footer') %>

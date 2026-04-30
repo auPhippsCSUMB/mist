@@ -1,4 +1,32 @@
 <%- include('partials/head', { title: 'Sign Up' }) %>
-<h1 class="h3">Sign Up</h1>
-<p class="text-muted">This is the Sign Up page.</p>
+<div class="row justify-content-center">
+	<div class="col-md-8 col-lg-6">
+		<div class="card soft-card">
+			<div class="card-body p-4">
+				<h1 class="h3 section-title mb-3">Create Your Account</h1>
+				<form method="post" action="/signUp" class="row g-3">
+					<div class="col-12">
+						<label for="username" class="form-label">Username</label>
+						<input type="text" class="form-control" id="username" name="username" required>
+					</div>
+					<div class="col-12">
+						<label for="email" class="form-label">Email</label>
+						<input type="email" class="form-control" id="email" name="email" required>
+					</div>
+					<div class="col-md-6">
+						<label for="password" class="form-label">Password</label>
+						<input type="password" class="form-control" id="password" name="password" required>
+					</div>
+					<div class="col-md-6">
+						<label for="confirmPassword" class="form-label">Confirm password</label>
+						<input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+					</div>
+					<div class="col-12">
+						<button type="submit" class="btn btn-primary w-100">Sign Up</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
 <%- include('partials/footer') %>
