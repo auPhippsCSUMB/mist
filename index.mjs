@@ -129,27 +129,36 @@ app.get('/gameTest', async (req, res) => {
 app.get('/gameSearch', async (req, res) => {
 
     let gameName = req.query.game;
+    let covIds = [];
+    const gameMap = new Map();
 
     let url = "https://api.igdb.com/v4/games";
+    // const response = await fetch(url, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `search \"${gameName}\"; fields name,cover,rating;`
+    // });
+
     const response = await fetch(url, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `search \"${gameName}\"; fields name,cover,rating;`
+        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating; sort rating_count desc;`
     });
 
     const game = await response.json();
+    console.log(game);
+
+    for (let i = 0; i < game.length; i++) {
+        gameMap.set(game[i].cover, "");
+    }
+
+
     let gameCovers = "";
 
-    for (let i = 0; i < game.length-1; i++) {
+    for (let i = 0; i < game.length - 1; i++) {
         gameCovers = gameCovers + game[i].id + ",";
     }
-    gameCovers = gameCovers + game[game.length-1].id;
-    console.log(game);
-    console.log(gameCovers);
-
-    const firstGame = game[0];
-    const cover = firstGame.cover;
-    const id = JSON.stringify(firstGame.id);
+    gameCovers = gameCovers + game[game.length - 1].id;
 
     // CODE THAT CAN BE USED FOR MORE GAME IMAGES LATER
     // let urlPic = "https://api.igdb.com/v4/games";
@@ -158,7 +167,7 @@ app.get('/gameSearch', async (req, res) => {
     //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
     //     body: `fields screenshots.*; where id = ${id};`
     // });
-    
+
     // const pics = await responsePic.json();
     // console.log(JSON.stringify(pics));
 
@@ -171,24 +180,12 @@ app.get('/gameSearch', async (req, res) => {
 
     let finalCover = await response2.json();
     console.log(finalCover);
-    let finalCovers = [];
-    for (let i = 0; i < finalCover.length; i++) {
-        finalCovers.push(finalCover[i].image_id);
-        console.log(finalCover[i].image_id);
+
+    for (let i = 0; i < game.length; i++) {
+        gameMap.set(finalCover[i].id, finalCover[i].image_id);
     }
-    console.log(finalCovers);
 
-    // let img = `https://images.igdb.com/igdb/image/upload/t_cover_big/${finalCover}.jpg`;
-    // console.log(img);
-
-    // let url3 = "https://api.igdb.com/v4/covers";
-    // const response2 = await fetch(url3, {
-    //     method: "POST",
-    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-    //     body: `where game = ${id}; fields image_id;`
-    // });
-
-    res.render('gameSearch.ejs', {game, finalCovers} );
+    res.render('gameSearch.ejs', { game, gameMap });
 });
 
 
@@ -203,3 +200,15 @@ function isUserAuthenticated(req, res, next) {
 app.listen(3000, () => {
     console.log("Express server running")
 })
+
+async function fetchPic(gameCover) {
+    let url2 = "https://api.igdb.com/v4/covers";
+    const response2 = await fetch(url2, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where game = ${gameCovers}; fields image_id;`
+    });
+    let finalCover = await response2.json();
+    console.log(finalCover);
+    return finalCover;
+}

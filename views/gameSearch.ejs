@@ -8,7 +8,7 @@
 <body>
     <% for (let i = 0; i < game.length; i++) { %>
         <h1><%=game[i].name%></h1>
-        <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=finalCovers[i]%>.jpg" width="300">
+        <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=gameMap.get(game[i].cover)%>.jpg" width="300">
     <% } %>
 </body>
 </html>
