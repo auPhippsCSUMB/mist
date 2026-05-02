@@ -1,25 +1,61 @@
+import 'dotenv/config';
 import express from 'express';
 import mysql from 'mysql2/promise';
+import session from 'express-session';
+import bcrypt from 'bcrypt';
 
 const app = express();
 
 app.set('view engine', 'ejs');
-
 app.use(express.static('public'));
 //for Express to get values using the POST method
 app.use(express.urlencoded({ extended: true }));
-//setting up database connection pool, replace values in red
 
+//setting sessions
+app.set('trust proxy', 1) // trust first proxy
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true
+    //   cookie: { secure: true }
+}))
+
+app.use((req, res, next) => {
+    res.locals.fullName = req.session.fullName;
+    console.log(req.url);
+    next(); //next middleware/route
+});
+
+
+//setting up database connection pool, replace values in red
 const pool = mysql.createPool({
-    host: "your_hostname",
-    user: "your_username",
-    password: "your_password",
-    database: "your_database",
+    host: "x71wqc4m22j8e3ql.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
+    user: "raf75r08n7zd5356",
+    password: "zjcnac7j466tft93", //put into env file
+    database: "aim59v409g7thmo2",
     connectionLimit: 10,
     waitForConnections: true
 });
+
+let token;
+
 //routes
 app.get('/', (req, res) => {
+    res.render('login.ejs');
+});
+
+app.get('/home', isUserAuthenticated, async (req, res) => {
+    let url = "https://id.twitch.tv/oauth2/token";
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&grant_type=client_credentials`
+    });
+
+    const test = await response.json();
+    token = test.access_token;
+    console.log(test);
+
     res.render('home.ejs');
 });
 
@@ -46,6 +82,7 @@ app.get('/friendsWishlist', (req, res) => {
 app.get('/aISearch', (req, res) => {
     res.render('aISearch.ejs');
 });
+
 app.get('/login', (req, res) => {
     res.render('login.ejs');
 });
@@ -54,14 +91,179 @@ app.get('/profile', (req, res) => {
     res.render('profile.ejs');
 });
 
-function isUserAuthenticated(req, res, next) {
-    if (req.session.userAuthenticated) {
-        return next();
+
+app.post('/loginProcess', async (req, res) => {
+    //    let username = req.body.username;
+    //    let password = req.body.password;
+    let { username, password } = req.body;
+
+    let hashedPassword = "";
+
+    let sql = `SELECT *
+              FROM mistusers
+              WHERE username = ?`;
+    const [rows] = await pool.query(sql, [username]);
+
+    if (rows.length > 0) { //username was found in the database
+        hashedPassword = rows[0].password;
+    }
+
+    const match = await bcrypt.compare(password, hashedPassword);
+
+    if (match) {
+        req.session.authenticated = true;
+        req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
+        res.redirect("/home");
     } else {
-        res.redirect('/');
+        let loginError = "Wrong Credentials! Try again!"
+        res.render('login.ejs', { loginError });
+    }
+});
+
+// app.get('/apiTest', async (req, res) => {
+//     let client_id = "3zzzpcewhkvs4yvk9v2117i0xqqviq";
+//     let client_secret = "nks9vjjfiq7g0ql2gyf6wjf4r29sry";
+//     // grant_type = client_credentials
+
+//     let url = "https://id.twitch.tv/oauth2/token";
+//     const response = await fetch(url, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+//         body: `client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&grant_type=client_credentials`
+//     });
+
+//     const test = await response.json();
+//     token = test.access_token;
+//     console.log(test);
+//     console.log('test' + test.toString());
+//     res.render('apiTest.ejs', { test });
+// });
+
+
+app.get('/gameTest', async (req, res) => {
+    let client_id = "3zzzpcewhkvs4yvk9v2117i0xqqviq";
+    let client_secret = "nks9vjjfiq7g0ql2gyf6wjf4r29sry";
+    // grant_type = client_credentials
+
+    let url = "https://api.igdb.com/v4/games";
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: "fields *;"
+    });
+
+    const game = await response.json();
+    res.send(game);
+});
+
+app.get('/gameSearch', async (req, res) => {
+
+    let gameName = req.query.game;
+    let covIds = [];
+    const gameMap = new Map();
+
+    let url = "https://api.igdb.com/v4/games";
+    // const response = await fetch(url, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `search \"${gameName}\"; fields name,cover,rating;`
+    // });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating; sort rating_count desc;`
+    });
+
+    const game = await response.json();
+    console.log(game);
+
+    for (let i = 0; i < game.length; i++) {
+        gameMap.set(game[i].cover, "");
+    }
+
+
+    let gameCovers = "";
+
+    for (let i = 0; i < game.length - 1; i++) {
+        gameCovers = gameCovers + game[i].id + ",";
+    }
+    gameCovers = gameCovers + game[game.length - 1].id;
+
+    // CODE THAT CAN BE USED FOR MORE GAME IMAGES LATER
+    // let urlPic = "https://api.igdb.com/v4/games";
+    // const responsePic = await fetch(urlPic, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `fields screenshots.*; where id = ${id};`
+    // });
+
+    // const pics = await responsePic.json();
+    // console.log(JSON.stringify(pics));
+
+    let url2 = "https://api.igdb.com/v4/covers";
+    const response2 = await fetch(url2, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where game = (${gameCovers}); fields image_id;`
+    });
+
+    let finalCover = await response2.json();
+
+    for (let i = 0; i < game.length; i++) {
+        gameMap.set(finalCover[i].id, finalCover[i].image_id);
+    }
+
+    res.render('gameSearch.ejs', { game, gameMap });
+});
+
+app.get('/gameInfo', async (req, res) => {
+
+    let gameId = req.query.game;
+
+    //endpoint for game url
+    let url = "https://api.igdb.com/v4/games";
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where id = ${gameId}; fields name,cover,rating,rating_count;`
+    });
+
+    const game = await response.json();
+
+    //endpoint for cover url
+    let url2 = "https://api.igdb.com/v4/covers";
+    const response2 = await fetch(url2, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where game = ${game[0].id}; fields image_id;`
+    });
+
+    let finalCover = await response2.json();
+
+    //endpoint for screenshots url
+    let url3 = "https://api.igdb.com/v4/screenshots";
+    const response3 = await fetch(url3, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where game = ${game[0].id}; fields image_id;`
+    });
+    let screenshots = await response3.json();
+    console.log(screenshots);
+
+    res.render('gameInfo.ejs', { game, finalCover, screenshots });
+});
+
+
+function isUserAuthenticated(req, res, next) {
+    if (req.session.authenticated) {
+        next();
+    } else {
+        res.redirect("/");
     }
 }
 
 app.listen(3000, () => {
-    console.log("Express server running on port 3000")
+    console.log("Express server running")
 })

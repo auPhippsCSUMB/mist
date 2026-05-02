@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1><%=game[0].name%></h1>
+    <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=finalCover[0].image_id%>.jpg" width="300">
+    <hr>
+    <h2>Rating: <%=Math.round(game[0].rating)%></h2>
+    <h2>Reviews: <%=game[0].rating_count%></h2>
+    <hr>
+    <% for (let i = 0; i < screenshots.length; i++) { %>
+        <img src="https://images.igdb.com/igdb/image/upload/t_screenshot_big/<%=screenshots[i].image_id%>.jpg">
+        <br>
+    <% } %>
+</body>
+</html>
