@@ -1,0 +1,34 @@
+<%- include('partials/head', { title: 'My Wishlist' }) %>
+<div class="card soft-card">
+	<div class="card-body p-4">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<h1 class="h3 section-title mb-0">My Wishlist</h1>
+			<a href="/search" class="btn btn-primary btn-sm">+ Find Games</a>
+		</div>
+		<% if (wishlist && wishlist.length > 0) { %>
+			<div class="table-responsive">
+				<table class="table table-hover align-middle mb-0">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Genre</th>
+							<th>Likes</th>
+						</tr>
+					</thead>
+					<tbody>
+						<% wishlist.forEach(game => { %>
+							<tr>
+								<td><strong><%= game.title %></strong></td>
+								<td class="text-muted"><%= game.genre %></td>
+								<td><span class="badge text-bg-secondary"><%= game.likes %></span></td>
+							</tr>
+						<% }) %>
+					</tbody>
+				</table>
+			</div>
+		<% } else { %>
+			<p class="text-muted">Your wishlist is empty. <a href="/search">Search for games</a> to add some!</p>
+		<% } %>
+	</div>
+</div>
+<%- include('partials/footer') %>

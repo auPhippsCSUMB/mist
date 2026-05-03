@@ -2,32 +2,12 @@
 <div class="card soft-card mb-4">
 	<div class="card-body p-4">
 		<h1 class="h3 section-title mb-3">Search Games</h1>
-		<form class="row g-3" method="get" action="/search">
-			<div class="col-md-6">
-				<label for="query" class="form-label">Game title</label>
-				<input type="text" class="form-control" id="query" name="query" placeholder="e.g. Hollow Knight">
+		<form class="row g-3" method="POST" action="/search">
+			<div class="col-md-9">
+				<label for="gameName" class="form-label">Game title</label>
+				<input type="text" class="form-control" id="gameName" name="gameName" placeholder="e.g. Hollow Knight" required>
 			</div>
-			<div class="col-md-3">
-				<label for="platform" class="form-label">Platform</label>
-				<select class="form-select" id="platform" name="platform">
-					<option selected value="">Any</option>
-					<option>PC</option>
-					<option>PlayStation</option>
-					<option>Xbox</option>
-					<option>Nintendo</option>
-				</select>
-			</div>
-			<div class="col-md-3">
-				<label for="genre" class="form-label">Genre</label>
-				<select class="form-select" id="genre" name="genre">
-					<option selected value="">Any</option>
-					<option>Action</option>
-					<option>RPG</option>
-					<option>Adventure</option>
-					<option>Simulation</option>
-				</select>
-			</div>
-			<div class="col-12">
+			<div class="col-md-3 d-grid align-self-end">
 				<button type="submit" class="btn btn-primary">Search</button>
 			</div>
 		</form>
@@ -37,23 +17,29 @@
 <div class="card soft-card">
 	<div class="card-body p-4">
 		<h2 class="h5 mb-3">Results</h2>
-		<div class="table-responsive">
-			<table class="table table-striped align-middle mb-0">
-				<thead>
-					<tr>
-						<th>Title</th>
-						<th>Platform</th>
-						<th>Genre</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td colspan="4" class="text-muted">No results yet. Run a search to see games.</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+		<% if (games && games.length > 0) { %>
+			<div class="row row-cols-2 row-cols-md-4 g-3">
+				<% games.forEach(game => { %>
+					<div class="col">
+						<div class="card soft-card h-100">
+							<% if (game.cover && game.cover.url) { %>
+								<img src="https:<%= game.cover.url.replace('t_thumb','t_cover_big') %>" class="card-img-top" alt="<%= game.name %>" style="object-fit:cover;height:180px;">
+							<% } %>
+							<div class="card-body p-2">
+								<p class="card-title fw-semibold mb-2"><%= game.name %></p>
+								<form action="/addToWishlist" method="POST">
+									<input type="hidden" name="gameID" value="<%= game.id %>">
+									<input type="hidden" name="title" value="<%= game.name %>">
+									<button type="submit" class="btn btn-sm btn-outline-primary w-100">+ Wishlist</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				<% }) %>
+			</div>
+		<% } else { %>
+			<p class="text-muted">No results yet. Run a search to see games.</p>
+		<% } %>
 	</div>
 </div>
 <%- include('partials/footer') %>

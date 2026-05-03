@@ -26,7 +26,6 @@ app.use((req, res, next) => {
     next(); //next middleware/route
 });
 
-
 //setting up database connection pool, replace values in red
 const pool = mysql.createPool({
     host: "x71wqc4m22j8e3ql.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
@@ -60,23 +59,132 @@ app.get('/home', isUserAuthenticated, async (req, res) => {
 });
 
 app.get('/search', (req, res) => {
-    res.render('search.ejs');
+    res.render('search.ejs', { games: [] });
+});
+
+app.post('/search', async (req, res) => {
+    const gameName = req.body.gameName;
+
+    const response = await fetch(`https://api.igdb.com/v4/games`, {
+        method: "POST",
+        headers: {
+            "Client-ID": process.env.CLIENT_ID,
+            "Authorization": `Bearer ${process.env.ACCESS_TOKEN}`,
+            "Content-Type": "text/plain"
+        },
+        body: `search "${gameName}"; fields name,cover.url; limit 10;`
+    });
+
+    const games = await response.json();
+    console.log(games);
+    res.render('search.ejs', { games });
+});
+
+app.get('/wishlist', async (req, res) => {
+    const userID = req.session.userID;
+
+    if (!userID) {
+        return res.redirect('/login');
+    }
+
+    const sql = `SELECT g.gameID, g.title, g.genre, g.likes
+                 FROM mistwishlist w
+                 JOIN mistgames g ON w.gameID = g.gameID
+                 WHERE w.userID = ?`;
+
+    const [wishlist] = await pool.query(sql, [userID]);
+    res.render('wishlist.ejs', { wishlist });
 });
 
 app.get('/signUp', (req, res) => {
     res.render('signUp.ejs');
 });
 
-app.get('/addFriends', (req, res) => {
-    res.render('addFriends.ejs');
+app.post('/signUp', async (req, res) => {
+    const { username, password, firstName, lastName } = req.body;
+
+    const sql = `INSERT INTO mistusers (username, password, firstName, lastName)
+                 VALUES (?, ?, ?, ?)`;
+
+    await pool.query(sql, [username, password, firstName, lastName]);
+    res.redirect('/login');
+});
+
+app.get('/addFriends', async (req, res) => {
+    const userID = req.session.userID;
+
+    const sql = `SELECT userID, username, firstName, lastName
+                 FROM mistusers
+                 WHERE userID != ?`;
+
+    const [users] = await pool.query(sql, [userID]);
+    res.render('addFriends.ejs', { users });
+});
+
+app.post('/addFriends', async (req, res) => {
+    const userID = req.session.userID;
+    const friendUserID = req.body.friendUserID;
+
+    const sql = `INSERT INTO mistfriends (userID, friendUserID, status) 
+                 VALUES (?, ?, 'accepted')`;
+    await pool.query(sql, [userID, friendUserID]);
+
+    res.redirect('/friends');
+});
+
+app.get('/friends', async (req, res) => {
+    const userID = req.session.userID;
+
+    const sql = `SELECT u.userID, u.username, u.firstName, u.lastName
+                 FROM mistfriends f
+                 JOIN mistusers u ON f.friendUserID = u.userID
+                 WHERE f.userID = ?`;
+
+    const [friends] = await pool.query(sql, [userID]);
+    res.render('friends.ejs', { friends });
 });
 
 app.get('/addGame', (req, res) => {
     res.render('addGame.ejs');
 });
 
+app.post('/addToWishlist', async (req, res) => {
+    const userID = req.session.userID;
+
+    if (!userID) {
+        return res.redirect('/login');
+    }
+
+    const { gameID, title } = req.body;
+
+    const sqlGame = `INSERT INTO mistgames (gameID, title, genre, likes)
+                     VALUES (?, ?, 'Unknown', 0)
+                     ON DUPLICATE KEY UPDATE title = VALUES(title)`;
+
+    await pool.query(sqlGame, [gameID, title]);
+
+    const sqlWishlist = `INSERT INTO mistwishlist (userID, gameID)
+                         VALUES (?, ?)`;
+
+    await pool.query(sqlWishlist, [userID, gameID]);
+
+    res.redirect('/wishlist');
+});
+
 app.get('/friendsWishlist', (req, res) => {
-    res.render('friendsWishlist.ejs');
+    res.render('friendsWishlist.ejs', { wishlist: [] });
+});
+
+app.get('/friendsWishlist/:friendUserID', async (req, res) => {
+    const friendUserID = req.params.friendUserID;
+
+    const sql = `SELECT g.gameID, g.title, g.genre, g.likes
+                 FROM mistwishlist w
+                 JOIN mistgames g ON w.gameID = g.gameID
+                 WHERE w.userID = ?`;
+
+    const [wishlist] = await pool.query(sql, [friendUserID]);
+    res.render('friendsWishlist.ejs', { friendUserID, wishlist });
 });
 
 app.get('/aISearch', (req, res) => {
@@ -89,6 +197,11 @@ app.get('/login', (req, res) => {
 
 app.get('/profile', (req, res) => {
     res.render('profile.ejs');
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
 });
 
 
@@ -112,6 +225,7 @@ app.post('/loginProcess', async (req, res) => {
 
     if (match) {
         req.session.authenticated = true;
+        req.session.userID = rows[0].userID;
         req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
         res.redirect("/home");
     } else {
@@ -181,7 +295,6 @@ app.get('/gameSearch', async (req, res) => {
     for (let i = 0; i < game.length; i++) {
         gameMap.set(game[i].cover, "");
     }
-
 
     let gameCovers = "";
 
