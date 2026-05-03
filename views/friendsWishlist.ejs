@@ -1,4 +1,33 @@
 <%- include('partials/head', { title: 'Friends Wishlists' }) %>
 <h1 class="h3">Friends Wishlists</h1>
 <p class="text-muted">This is the Friends Wishlists page.</p>
+
+
+<a href="/friends">Back to Friends</a>
+
+<hr>
+
+<% if (wishlist.length > 0) { %>
+
+    <% wishlist.forEach(game => { %>
+
+        <div>
+
+            <h3><%= game.title %></h3>
+
+            <p>Genre: <%= game.genre %></p>
+
+            <p>Likes: <%= game.likes %></p>
+
+        </div>
+
+        <hr>
+
+    <% }) %>
+
+<% } else { %>
+
+    <p>This friend has no games in their wishlist.</p>
+
+<% } %>
 <%- include('partials/footer') %>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Friends</title>
+</head>
+<body>
+    <h1>My Friends</h1>
+
+<a href="/profile">Profile</a>
+
+<br>
+
+<a href="/addFriends">Add Friends</a>
+
+<hr>
+
+<% if (friends.length > 0) { %>
+
+    <% friends.forEach(friend => { %>
+
+        <div>
+
+            <h3><%= friend.username %></h3>
+
+            <p><%= friend.firstName %> <%= friend.lastName %></p>
+
+            <a href="/friendsWishlist/<%= friend.userID %>">
+
+                View Wishlist
+
+            </a>
+
+        </div>
+
+        <hr>
+
+    <% }) %>
+
+<% } else { %>
+
+    <p>You have no friends yet.</p>
+
+<% } %>
+</body>
+</html>

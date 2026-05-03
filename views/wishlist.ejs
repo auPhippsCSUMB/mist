@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist</title>
+</head>
+<body>
+    <h1>My Wishlist</h1>
+
+<a href="/profile">Profile</a>
+
+<br>
+
+<a href="/search">Search Games</a>
+
+<hr>
+
+<% if (wishlist.length > 0) { %>
+
+    <% wishlist.forEach(game => { %>
+
+        <div>
+
+            <h3><%= game.title %></h3>
+
+            <p>Genre: <%= game.genre %></p>
+
+            <p>Likes: <%= game.likes %></p>
+
+        </div>
+
+        <hr>
+
+    <% }) %>
+
+<% } else { %>
+
+    <p>Your wishlist is empty.</p>
+
+<% } %>
+</body>
+</html>
