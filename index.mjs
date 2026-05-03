@@ -63,7 +63,7 @@ app.get('/search', (req, res) => {
 });
 
 app.post('/search', async (req, res) => {
-    let gameName = req.body.game;
+    let gameName = req.body.gameName;
     console.log(gameName);
     let covIds = [];
     const gameMap = new Map();
