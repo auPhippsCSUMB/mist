@@ -143,13 +143,17 @@ app.post('/addToWishlist', async (req, res) => {
         return res.redirect('/login');
     }
 
-    const { gameID, title, genre } = req.body;
+    const { gameID, title, coverID, coverImageID, rating } = req.body;
 
-    const sqlGame = `INSERT INTO mistgames (gameID, title, genre, likes)
-                     VALUES (?, ?, 'Unknown', 0)
-                     ON DUPLICATE KEY UPDATE title = VALUES(title)`;
+    const sqlGame = `INSERT INTO mistgames (gameID, title, coverID, coverImageID, rating)
+                     VALUES (?, ?, ?, ?, ?)
+                     ON DUPLICATE KEY UPDATE
+                     title = VALUES(title),
+                     coverID = VALUES(coverID),
+                     coverImageID = VALUES(coverImageID),
+                     rating = VALUES(rating)`;
     
-    await pool.query(sqlGame, [gameID, title]);
+    await pool.query(sqlGame, [gameID, title, coverID, coverImageID, rating]);
 
     const sqlWishlist = `INSERT INTO mistwishlist (userID, gameID)
                          VALUES (?, ?)`;
