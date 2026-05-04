@@ -22,16 +22,18 @@
 				<% games.forEach(game => { %>
 					<div class="col">
 						<div class="card soft-card h-100">
-							<% if (game.cover && game.cover.url) { %>
-								<img src="https:<%= game.cover.url.replace('t_thumb','t_cover_big') %>" class="card-img-top" alt="<%= game.name %>" style="object-fit:cover;height:180px;">
-							<% } %>
-							<div class="card-body p-2">
-								<p class="card-title fw-semibold mb-2"><%= game.name %></p>
-								<form action="/addToWishlist" method="POST">
-									<input type="hidden" name="gameID" value="<%= game.id %>">
-									<input type="hidden" name="title" value="<%= game.name %>">
-									<button type="submit" class="btn btn-sm btn-outline-primary w-100">+ Wishlist</button>
-								</form>
+							<a href="/gameInfo?game=<%=game.id%>">
+								<% if (game.cover) { %>
+									<img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=gameMap.get(game.cover)%>.jpg" class="card-img-top" alt="<%= game.name %>" style="object-fit:cover;height:180px;">
+								<% } %>
+								<div class="card-body p-2">
+									<p class="card-title fw-semibold mb-2"><%= game.name %></p>
+									<form action="/addToWishlist" method="POST">
+										<input type="hidden" name="gameID" value="<%= game.id %>">
+										<input type="hidden" name="title" value="<%= game.name %>">
+										<button type="submit" class="btn btn-sm btn-outline-primary w-100">+ Wishlist</button>
+									</form>
+								</a>
 							</div>
 						</div>
 					</div>

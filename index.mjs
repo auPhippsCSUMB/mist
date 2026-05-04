@@ -3,8 +3,21 @@ import express from 'express';
 import mysql from 'mysql2/promise';
 import session from 'express-session';
 import bcrypt from 'bcrypt';
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const app = express();
+
+async function aiSearch(gameSearch) {
+    const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite-preview",
+        contents: gameSearch,
+        generationConfig: { responseMimeType: "application/json" }, 
+    });
+    console.log(response.text);
+    return response.text;
+}
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -65,7 +78,6 @@ app.get('/search', (req, res) => {
 app.post('/search', async (req, res) => {
     let gameName = req.body.gameName;
     console.log(gameName);
-    let covIds = [];
     const gameMap = new Map();
 
     let url = "https://api.igdb.com/v4/games";
@@ -114,11 +126,12 @@ app.post('/search', async (req, res) => {
     });
 
     let finalCover = await response2.json();
+    console.log(finalCover);
 
-    for (let i = 0; i < games.length; i++) {
+    for (let i = 0; i < finalCover.length; i++) {
         gameMap.set(finalCover[i].id, finalCover[i].image_id);
     }
-    res.render('search.ejs', { games });
+    res.render('search.ejs', { games, gameMap });
 });
 
 app.get('/wishlist', async (req, res) => {
@@ -228,8 +241,73 @@ app.get('/friendsWishlist/:friendUserID', async (req, res) => {
     res.render('friendsWishlist.ejs', { friendUserID, wishlist });
 });
 
-app.get('/aISearch', (req, res) => {
+app.get('/aISearch', async (req, res) => {
     res.render('aISearch.ejs');
+});
+
+app.post('/aISearch', async (req, res) => {
+    let prompt = `You are a very concise agent that only returns the names of 
+        games in a JSON Format with a max length of 3. No matter what 
+        the contents of the search are, return game names in a JSON array format and do nothing else.
+        The following content will be the user search: `
+
+    prompt = prompt + req.body.prompt;
+
+    let aiResults = await aiSearch(prompt);
+    let gameList = JSON.parse(aiResults);
+    console.log(gameList);
+
+    // const gameMap = new Map();
+
+    // let url = "https://api.igdb.com/v4/games";
+
+    // const response = await fetch(url, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `where name ~ *\"${gameName}\"*; fields name,cover,rating; sort rating_count desc;`
+    // });
+
+    // const games = await response.json();
+    // console.log(games);
+
+    // for (let i = 0; i < games.length; i++) {
+    //     gameMap.set(games[i].cover, "");
+    // }
+
+    // let gameCovers = "";
+
+    // for (let i = 0; i < games.length - 1; i++) {
+    //     gameCovers = gameCovers + games[i].id + ",";
+    // }
+    // gameCovers = gameCovers + games[games.length - 1].id;
+
+    // // CODE THAT CAN BE USED FOR MORE GAME IMAGES LATER
+    // // let urlPic = "https://api.igdb.com/v4/games";
+    // // const responsePic = await fetch(urlPic, {
+    // //     method: "POST",
+    // //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    // //     body: `fields screenshots.*; where id = ${id};`
+    // // });
+
+    // // const pics = await responsePic.json();
+    // // console.log(JSON.stringify(pics));
+
+    // let url2 = "https://api.igdb.com/v4/covers";
+    // const response2 = await fetch(url2, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `where game = (${gameCovers}); fields image_id;`
+    // });
+
+    // let finalCover = await response2.json();
+    // console.log(finalCover);
+
+    // for (let i = 0; i < finalCover.length; i++) {
+    //     gameMap.set(finalCover[i].id, finalCover[i].image_id);
+    // }
+
+
+    res.send(gameList[1]);
 });
 
 app.get('/login', (req, res) => {
