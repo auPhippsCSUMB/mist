@@ -1,49 +1,47 @@
 <%- include('partials/head', { title: 'Search' }) %>
-    <h1 class="h3">Search</h1>
-    
-    <form action="/search" method="POST">
-        <label for="gameName">Search for a game:</label>
-        <input type="text" id="gameName" name="gameName" required>
+<div class="card soft-card mb-4">
+	<div class="card-body p-4">
+		<h1 class="h3 section-title mb-3">Search Games</h1>
+		<form class="row g-3" method="POST" action="/search">
+			<div class="col-md-9">
+				<label for="gameName" class="form-label">Game title</label>
+				<input type="text" class="form-control" id="gameName" name="gameName" placeholder="e.g. Hollow Knight" required>
+			</div>
+			<div class="col-md-3 d-grid align-self-end">
+				<button type="submit" class="btn btn-primary">Search</button>
+			</div>
+		</form>
+	</div>
+</div>
 
-        <button type="submit">Search</button>
-    </form>
-
-    <hr>
-
-    <% if (games && games.length> 0) { %>
-        <h2>Search Results</h2>
-
-        <% games.forEach(game=> { %>
-            <div>
-                <h3>
-                    <%= game.name %>
-                </h3>
-
-                <% if (game.summary) { %>
-                    <p><strong>Summary:</strong>
-                        <%= game.summary %>
-                    </p>
-                    <% } %>
-
-                        <% if (game.rating) { %>
-                            <p><strong>Rating:</strong>
-                                <%= Math.round(game.rating) %>
-                            </p>
-                            <% } %>
-
-                                <form action="/addToWishlist" method="POST">
-                                    <input type="hidden" name="gameID" value="<%= game.id %>">
-
-                                    <input type="hidden" name="title" value="<%= game.name %>">
-
-                                    <button type="submit">Add to Wishlist</button>
-                                </form>
-
-                                <hr>
-            </div>
-            <% }) %>
-
-                <% } else { %>
-                    <p>No games searched yet.</p>
-                    <% } %>
-                        <%- include('partials/footer') %>
+<div class="card soft-card">
+	<div class="card-body p-4">
+		<h2 class="h5 mb-3">Results</h2>
+		<% if (games && games.length > 0) { %>
+			<div class="row row-cols-2 row-cols-md-4 g-3">
+				<% games.forEach(game => { %>
+					<div class="col">
+						<div class="card soft-card h-100">
+							<a href="/gameInfo?game=<%=game.id%>">
+								<% if (game.cover) { %>
+									<img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=gameMap.get(game.cover)%>.jpg" class="card-img-top" alt="<%= game.name %>" style="object-fit:cover;height:180px;">
+								<% } %>
+								<div class="card-body p-2">
+									<p class="card-title fw-semibold mb-2"><%= game.name %></p>
+									<form action="/addToWishlist" method="POST">
+										<input type="hidden" name="gameID" value="<%= game.id %>">
+										<input type="hidden" name="title" value="<%= game.name %>">
+										<button type="submit" class="btn btn-sm btn-outline-primary w-100">+ Wishlist</button>
+									</form>
+								</a>
+							</div>
+						</div>
+					</div>
+				<% }) %>
+			</div>
+		<% } else { %>
+			<p class="text-muted">No results yet. Run a search to see games.</p>
+		<% } %>
+	</div>
+</div>
+<%- include('partials/footer') %>

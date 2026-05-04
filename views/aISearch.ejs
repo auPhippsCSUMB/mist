@@ -1,4 +1,53 @@
 <%- include('partials/head', { title: 'AI Search' }) %>
-<h1 class="h3">AI Search</h1>
-<p class="text-muted">This is the AI Search page.</p>
+<div class="row g-3">
+	<div class="col-lg-6">
+		<div class="card soft-card h-100">
+			<div class="card-body p-4">
+				<h1 class="h4 section-title mb-3">AI Game Search</h1>
+				<form method="post" action="/aISearch" class="row g-3">
+					<div class="col-12">
+						<label for="prompt" class="form-label">Describe what you want to play</label>
+						<textarea class="form-control" id="prompt" name="prompt" rows="7" placeholder="Example: A story-rich sci-fi RPG with turn-based combat"></textarea>
+					</div>
+					<div class="col-12">
+						<button type="submit" class="btn btn-primary">Get Suggestions</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-6">
+		<div class="card soft-card h-100">
+			<div class="card-body p-4">
+				<h2 class="h5 mb-3">Suggested Games</h2>
+				<% if (games && games.length > 0) { %>
+					<div class="row row-cols-2 row-cols-md-4 g-3">
+						<% games.forEach(game => { %>
+							<div class="col">
+								<div class="card soft-card h-100">
+									<a href="/gameInfo?game=<%=game.id%>">
+										<% if (game.cover) { %>
+											<img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=gameMap.get(game.cover)%>.jpg" class="card-img-top" alt="<%= game.name %>" style="object-fit:cover;height:180px;">
+										<% } %>
+										<div class="card-body p-2">
+											<p class="card-title fw-semibold mb-2"><%= game.name %></p>
+											<form action="/addToWishlist" method="POST">
+												<input type="hidden" name="gameID" value="<%= game.id %>">
+												<input type="hidden" name="title" value="<%= game.name %>">
+												<button type="submit" class="btn btn-sm btn-outline-primary w-100">+ Wishlist</button>
+											</form>
+										</a>
+									</div>
+								</div>
+							</div>
+						<% }) %>
+					</div>
+				<% } else { %>
+					<p class="text-muted">No results yet. Run a search to see games.</p>
+				<% } %>
+			</div>
+		</div>
+	</div>
+</div>
 <%- include('partials/footer') %>
