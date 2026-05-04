@@ -43,6 +43,13 @@ let token;
 app.get('/', (req, res) => {
     res.render('login.ejs');
 });
+app.get('/friendsList', isUserAuthenticated, async(req, res) => {
+    let sql = `SELECT *
+              FROM mistfriends`;
+    const [rows] = await pool.query(sql);
+    console.log(rows);
+    res.render('friendsList.ejs', { rows });
+});
 
 app.get('/home', isUserAuthenticated, async (req, res) => {
     let url = "https://id.twitch.tv/oauth2/token";
