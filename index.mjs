@@ -41,10 +41,10 @@ app.use((req, res, next) => {
 
 //setting up database connection pool, replace values in red
 const pool = mysql.createPool({
-    host: "x71wqc4m22j8e3ql.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
-    user: "raf75r08n7zd5356",
-    password: "zjcnac7j466tft93", //put into env file
-    database: "aim59v409g7thmo2",
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD, //put into env file
+    database: process.env.DB_DATABASE,
     connectionLimit: 10,
     waitForConnections: true
 });
