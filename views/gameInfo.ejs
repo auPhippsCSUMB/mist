@@ -5,11 +5,17 @@
                 <div class="col">
                     <% if (finalCover[0]) { %>
                     <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=finalCover[0].image_id%>.jpg" class="d-block"
-                        width="400">
+                        width="300">
                     <% } else { %>
                         <img src="" alt="No Image Available" class="d-block"
                         width="300">
                     <% } %>
+                    <br>
+                    <form action="/addToWishlist" method="POST">
+						<input type="hidden" name="gameID" value="<%=game[0].id%>">
+						<input type="hidden" name="title" value="<%=game[0].name%>">
+						<button type="submit" class="btn btn-sm btn-outline-primary" style="width: 300px;">+ Wishlist</button>
+					</form>
                 </div>
                 <div class="col">
                     <h1>
@@ -23,8 +29,12 @@
                     <br>
                     <h2>Description</h2>
                     <hr>
+                    <% if (!game[0].storyline) { %>
+                        <h5>No Description Given</h5>
+                    <% } else { %>
                     <p style="max-height: 200px; overflow-y: scroll;"><%=game[0].storyline%>
                     </p>
+                    <% } %>
                     <hr>
                 </div>
             </div>

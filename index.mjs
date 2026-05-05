@@ -513,6 +513,23 @@ app.get('/gameInfo', async (req, res) => {
     res.render('gameInfo.ejs', { game, finalCover, screenshots });
 });
 
+app.get('/deleteGame', async (req, res) => {
+    const userID = req.session.userID;
+
+    if (!userID) {
+        return res.redirect('/login');
+    }
+
+    let gameId = req.query.game;
+
+    let sql = `DELETE
+              FROM mistwishlist
+              WHERE gameID = ? AND userID = ?`;
+    const [rows] = await pool.query(sql, [gameId, userID]);
+
+    res.redirect('/wishlist');
+});
+
 
 function isUserAuthenticated(req, res, next) {
     if (req.session.authenticated) {
