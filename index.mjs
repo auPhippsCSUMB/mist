@@ -200,6 +200,19 @@ app.get('/friends', async (req, res) => {
     res.render('friends.ejs', { friends });
 });
 
+app.post('/removeFriend', isUserAuthenticated, async (req, res) => {
+    const userID = req.session.userID;
+
+    const friendUserID = req.body.friendUserID;
+
+    const sql = `DELETE FROM mistfriends
+                 WHERE userID = ? AND friendUserID = ?`;
+
+    await pool.query(sql, [userID, friendUserID]);
+
+    res.redirect('/friends');
+});
+
 app.get('/addGame', (req, res) => {
     res.render('addGame.ejs');
 });
