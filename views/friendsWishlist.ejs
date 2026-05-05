@@ -10,7 +10,7 @@
 				<% wishlist.forEach(game => { %>
 					<li class="list-group-item d-flex justify-content-between align-items-center px-0">
 						<div>
-							<strong><%= game.title %></strong>
+							<a href="/gameInfo?game=<%=game.gameID%>"><strong><%= game.title %></strong></a>
 							<span class="text-muted ms-2"><%= game.genre %></span>
 						</div>
 						<span class="badge text-bg-secondary"><%= game.likes %> likes</span>

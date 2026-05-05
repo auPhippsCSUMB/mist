@@ -21,7 +21,11 @@
 		<div class="card soft-card h-100">
 			<div class="card-body p-4">
 				<h2 class="h5 mb-3">Suggested Games</h2>
-				<% if (games && games.length > 0) { %>
+				<% if (games[0] == "AI Search Failed") { %>
+					<b><p>AI Search Failed. Please Try Again Later.</p></b>
+					<br>
+					<p>This typically happens because of too many queries in a short amount of time.</p>
+				<% } else if (games && games.length > 0) { %>
 					<div class="row row-cols-2 row-cols-md-4 g-3">
 						<% games.forEach(game => { %>
 							<div class="col">
