@@ -1,0 +1,43 @@
+<%- include('partials/head', { title: 'Add Game' }) %>
+<div class="card soft-card">
+	<div class="card-body p-4 p-md-5">
+		<h1 class="h3 section-title mb-3">Add a Game to Your Wishlist</h1>
+		<form method="post" action="/addGame" class="row g-3">
+			<div class="col-md-6">
+				<label for="gameTitle" class="form-label">Game title</label>
+				<input type="text" class="form-control" id="gameTitle" name="gameTitle" required>
+			</div>
+			<div class="col-md-6">
+				<label for="platform" class="form-label">Platform</label>
+				<select class="form-select" id="platform" name="platform" required>
+					<option value="" selected disabled>Select platform</option>
+					<option>PC</option>
+					<option>PlayStation</option>
+					<option>Xbox</option>
+					<option>Nintendo</option>
+					<option>Mobile</option>
+				</select>
+			</div>
+			<div class="col-md-6">
+				<label for="genre" class="form-label">Genre</label>
+				<input type="text" class="form-control" id="genre" name="genre" placeholder="Action RPG">
+			</div>
+			<div class="col-md-6">
+				<label for="priority" class="form-label">Priority</label>
+				<select class="form-select" id="priority" name="priority">
+					<option>Low</option>
+					<option selected>Medium</option>
+					<option>High</option>
+				</select>
+			</div>
+			<div class="col-12">
+				<label for="notes" class="form-label">Notes</label>
+				<textarea class="form-control" id="notes" name="notes" rows="4" placeholder="Why do you want this game?"></textarea>
+			</div>
+			<div class="col-12">
+				<button type="submit" class="btn btn-primary">Add Game</button>
+			</div>
+		</form>
+	</div>
+</div>
+<%- include('partials/footer') %>

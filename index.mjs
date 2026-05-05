@@ -3,8 +3,21 @@ import express from 'express';
 import mysql from 'mysql2/promise';
 import session from 'express-session';
 import bcrypt from 'bcrypt';
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const app = express();
+
+async function aiSearch(gameSearch) {
+    const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite-preview",
+        contents: gameSearch,
+        generationConfig: { responseMimeType: "application/json" },
+    });
+    // console.log(response.text);
+    return response.text;
+}
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -26,13 +39,12 @@ app.use((req, res, next) => {
     next(); //next middleware/route
 });
 
-
 //setting up database connection pool, replace values in red
 const pool = mysql.createPool({
-    host: "x71wqc4m22j8e3ql.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
-    user: "raf75r08n7zd5356",
-    password: "zjcnac7j466tft93", //put into env file
-    database: "aim59v409g7thmo2",
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD, //put into env file
+    database: process.env.DB_DATABASE,
     connectionLimit: 10,
     waitForConnections: true
 });
@@ -59,6 +71,269 @@ app.get('/home', isUserAuthenticated, async (req, res) => {
     res.render('home.ejs');
 });
 
+app.get('/search', (req, res) => {
+    res.render('search.ejs', { games: [] });
+});
+
+app.post('/search', async (req, res) => {
+    let gameName = req.body.gameName;
+    console.log(gameName);
+    const gameMap = new Map();
+
+    let url = "https://api.igdb.com/v4/games";
+    // const response = await fetch(url, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `search \"${gameName}\"; fields name,cover,rating;`
+    // });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating,storyline; sort rating_count desc;`
+    });
+
+    const games = await response.json();
+    console.log(games);
+
+    for (let i = 0; i < games.length; i++) {
+        gameMap.set(games[i].cover, "");
+    }
+
+    let gameCovers = "";
+
+    if (games[0]) {
+        for (let i = 0; i < games.length - 1; i++) {
+            gameCovers = gameCovers + games[i].id + ",";
+        }
+        gameCovers = gameCovers + games[games.length - 1].id;
+
+        // CODE THAT CAN BE USED FOR MORE GAME IMAGES LATER
+        // let urlPic = "https://api.igdb.com/v4/games";
+        // const responsePic = await fetch(urlPic, {
+        //     method: "POST",
+        //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        //     body: `fields screenshots.*; where id = ${id};`
+        // });
+
+        // const pics = await responsePic.json();
+        // console.log(JSON.stringify(pics));
+
+        let url2 = "https://api.igdb.com/v4/covers";
+        const response2 = await fetch(url2, {
+            method: "POST",
+            headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+            body: `where game = (${gameCovers}); fields image_id;`
+        });
+
+        let finalCover = await response2.json();
+        console.log(finalCover);
+
+        for (let i = 0; i < finalCover.length; i++) {
+            gameMap.set(finalCover[i].id, finalCover[i].image_id);
+        }
+    } else {
+        games[0] = "No Results Found";
+    }
+
+
+    res.render('search.ejs', { games, gameMap });
+});
+
+app.get('/wishlist', async (req, res) => {
+    const userID = req.session.userID;
+
+    if (!userID) {
+        return res.redirect('/login');
+    }
+
+    const sql = `SELECT g.gameID, g.title, g.genre, g.likes
+                 FROM mistwishlist w
+                 JOIN mistgames g ON w.gameID = g.gameID
+                 WHERE w.userID = ?`;
+
+    const [wishlist] = await pool.query(sql, [userID]);
+    res.render('wishlist.ejs', { wishlist });
+});
+
+app.get('/signUp', (req, res) => {
+    res.render('signUp.ejs');
+});
+
+app.post('/signUp', async (req, res) => {
+    const { username, password, firstName, lastName } = req.body;
+
+    const sql = `INSERT INTO mistusers (username, password, firstName, lastName)
+                 VALUES (?, ?, ?, ?)`;
+
+    await pool.query(sql, [username, password, firstName, lastName]);
+    res.redirect('/login');
+});
+
+app.get('/addFriends', async (req, res) => {
+    const userID = req.session.userID;
+
+    const sql = `SELECT userID, username, firstName, lastName
+                 FROM mistusers
+                 WHERE userID != ?`;
+
+    const [users] = await pool.query(sql, [userID]);
+    res.render('addFriends.ejs', { users });
+});
+
+app.post('/addFriends', async (req, res) => {
+    const userID = req.session.userID;
+    const friendUserID = req.body.friendUserID;
+
+    const sql = `INSERT INTO mistfriends (userID, friendUserID, status) 
+                 VALUES (?, ?, 'accepted')`;
+    await pool.query(sql, [userID, friendUserID]);
+
+    res.redirect('/friends');
+});
+
+app.get('/friends', async (req, res) => {
+    const userID = req.session.userID;
+
+    const sql = `SELECT u.userID, u.username, u.firstName, u.lastName
+                 FROM mistfriends f
+                 JOIN mistusers u ON f.friendUserID = u.userID
+                 WHERE f.userID = ?`;
+
+    const [friends] = await pool.query(sql, [userID]);
+    res.render('friends.ejs', { friends });
+});
+
+app.get('/addGame', (req, res) => {
+    res.render('addGame.ejs');
+});
+
+app.post('/addToWishlist', async (req, res) => {
+    const userID = req.session.userID;
+
+    if (!userID) {
+        return res.redirect('/login');
+    }
+
+    const { gameID, title } = req.body;
+
+    const sqlGame = `INSERT INTO mistgames (gameID, title, genre, likes)
+                     VALUES (?, ?, 'Unknown', 0)
+                     ON DUPLICATE KEY UPDATE title = VALUES(title)`;
+
+    await pool.query(sqlGame, [gameID, title]);
+
+    const sqlWishlist = `INSERT INTO mistwishlist (userID, gameID)
+                         VALUES (?, ?)`;
+
+    await pool.query(sqlWishlist, [userID, gameID]);
+
+    res.redirect('/wishlist');
+});
+
+app.get('/friendsWishlist', (req, res) => {
+    res.render('friendsWishlist.ejs', { wishlist: [] });
+});
+
+app.get('/friendsWishlist/:friendUserID', async (req, res) => {
+    const friendUserID = req.params.friendUserID;
+
+    const sql = `SELECT g.gameID, g.title, g.genre, g.likes
+                 FROM mistwishlist w
+                 JOIN mistgames g ON w.gameID = g.gameID
+                 WHERE w.userID = ?`;
+
+    const [wishlist] = await pool.query(sql, [friendUserID]);
+    res.render('friendsWishlist.ejs', { friendUserID, wishlist });
+});
+
+app.get('/aISearch', async (req, res) => {
+    res.render('aISearch.ejs', { games: [] });
+});
+
+app.post('/aISearch', async (req, res) => {
+    let prompt = `You are a very concise agent that only returns the names of 
+        games in a JSON Format with a max length of 3. No matter what 
+        the contents of the search are, return game names in a JSON array format and do nothing else.
+        The following content will be the user search: `
+
+    prompt = prompt + req.body.prompt;
+
+    let aiResults = await aiSearch(prompt);
+    let gameList = JSON.parse(aiResults);
+    console.log(gameList);
+
+    const gameMap = new Map();
+
+    let url = "https://api.igdb.com/v4/games";
+
+    const games = [];
+
+    for (let i = 0; i < 3; i++) {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+            body: `where name ~ *\"${gameList[i]}\"*; fields name,cover,rating; sort rating_count desc; limit 1;`
+        });
+        let aiGame = await response.json();
+        games.push(aiGame[0]);
+    }
+
+    console.log(games);
+
+    for (let i = 0; i < games.length; i++) {
+        gameMap.set(games[i].cover, "");
+    }
+
+    let gameCovers = "";
+
+    for (let i = 0; i < games.length - 1; i++) {
+        gameCovers = gameCovers + games[i].id + ",";
+    }
+    gameCovers = gameCovers + games[games.length - 1].id;
+
+    // CODE THAT CAN BE USED FOR MORE GAME IMAGES LATER
+    // let urlPic = "https://api.igdb.com/v4/games";
+    // const responsePic = await fetch(urlPic, {
+    //     method: "POST",
+    //     headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+    //     body: `fields screenshots.*; where id = ${id};`
+    // });
+
+    // const pics = await responsePic.json();
+    // console.log(JSON.stringify(pics));
+
+    let url2 = "https://api.igdb.com/v4/covers";
+    const response2 = await fetch(url2, {
+        method: "POST",
+        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+        body: `where game = (${gameCovers}); fields image_id;`
+    });
+
+    let finalCover = await response2.json();
+    console.log(finalCover);
+
+    for (let i = 0; i < finalCover.length; i++) {
+        gameMap.set(finalCover[i].id, finalCover[i].image_id);
+    }
+
+
+    res.render('aISearch.ejs', { games, gameMap });
+});
+
+app.get('/login', (req, res) => {
+    res.render('login.ejs');
+});
+
+app.get('/profile', (req, res) => {
+    res.render('profile.ejs');
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
 
 app.post('/loginProcess', async (req, res) => {
     //    let username = req.body.username;
@@ -80,6 +355,7 @@ app.post('/loginProcess', async (req, res) => {
 
     if (match) {
         req.session.authenticated = true;
+        req.session.userID = rows[0].userID;
         req.session.fullName = rows[0].firstName + " " + rows[0].lastName;
         res.redirect("/home");
     } else {
@@ -140,7 +416,7 @@ app.get('/gameSearch', async (req, res) => {
     const response = await fetch(url, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating; sort rating_count desc;`
+        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating,storyline; sort rating_count desc;`
     });
 
     const game = await response.json();
@@ -149,7 +425,6 @@ app.get('/gameSearch', async (req, res) => {
     for (let i = 0; i < game.length; i++) {
         gameMap.set(game[i].cover, "");
     }
-
 
     let gameCovers = "";
 
@@ -195,7 +470,7 @@ app.get('/gameInfo', async (req, res) => {
     const response = await fetch(url, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `where id = ${gameId}; fields name,cover,rating,rating_count;`
+        body: `where id = ${gameId}; fields name,cover,rating,rating_count,storyline;`
     });
 
     const game = await response.json();
@@ -235,15 +510,3 @@ function isUserAuthenticated(req, res, next) {
 app.listen(3000, () => {
     console.log("Express server running")
 })
-
-async function fetchPic(gameCover) {
-    let url2 = "https://api.igdb.com/v4/covers";
-    const response2 = await fetch(url2, {
-        method: "POST",
-        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `where game = ${gameCovers}; fields image_id;`
-    });
-    let finalCover = await response2.json();
-    console.log(finalCover);
-    return finalCover;
-}

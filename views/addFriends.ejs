@@ -1,0 +1,32 @@
+<%- include('partials/head', { title: 'Add Friends' }) %>
+<div class="row g-3">
+	<div class="col-12">
+		<div class="card soft-card">
+			<div class="card-body p-4">
+				<div class="d-flex justify-content-between align-items-center mb-3">
+					<h1 class="h4 section-title mb-0">Add Friends</h1>
+					<a href="/friends" class="btn btn-outline-secondary btn-sm">My Friends</a>
+				</div>
+				<% if (users && users.length > 0) { %>
+					<ul class="list-group">
+						<% users.forEach(user => { %>
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+								<div>
+									<strong><%= user.username %></strong>
+									<span class="text-muted ms-2"><%= user.firstName %> <%= user.lastName %></span>
+								</div>
+								<form action="/addFriends" method="POST">
+									<input type="hidden" name="friendUserID" value="<%= user.userID %>">
+									<button type="submit" class="btn btn-sm btn-outline-success">Add Friend</button>
+								</form>
+							</li>
+						<% }) %>
+					</ul>
+				<% } else { %>
+					<p class="text-muted">No users found.</p>
+				<% } %>
+			</div>
+		</div>
+	</div>
+</div>
+<%- include('partials/footer') %>
