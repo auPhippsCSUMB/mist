@@ -3,14 +3,14 @@
 
 <head>
     <%- include("partials/head.ejs") %>
-    <title>Mist Homepage</title>
+    <title>Friends List</title>
 </head>
 
 <body>
     Friends List!
     <div id="friends">
     <% for (let i of rows) {  %>
-        User: <%= i.friendshipID %>, Friend Ship Status: <%= i.status %><br>
+        User: <%= i.userName %>, Friend Ship Status: <%= i.status %><br>
     <% } %>
     </div>
 </body>
