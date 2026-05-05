@@ -90,7 +90,7 @@ app.post('/search', async (req, res) => {
     const response = await fetch(url, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating; sort rating_count desc;`
+        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating,storyline; sort rating_count desc;`
     });
 
     const games = await response.json();
@@ -410,7 +410,7 @@ app.get('/gameSearch', async (req, res) => {
     const response = await fetch(url, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating; sort rating_count desc;`
+        body: `where name ~ *\"${gameName}\"*; fields name,cover,rating,storyline; sort rating_count desc;`
     });
 
     const game = await response.json();
@@ -464,7 +464,7 @@ app.get('/gameInfo', async (req, res) => {
     const response = await fetch(url, {
         method: "POST",
         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: `where id = ${gameId}; fields name,cover,rating,rating_count;`
+        body: `where id = ${gameId}; fields name,cover,rating,rating_count,storyline;`
     });
 
     const game = await response.json();
