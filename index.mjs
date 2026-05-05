@@ -71,11 +71,11 @@ app.get('/home', isUserAuthenticated, async (req, res) => {
     res.render('home.ejs');
 });
 
-app.get('/search', (req, res) => {
+app.get('/search', isUserAuthenticated, async (req, res) => {
     res.render('search.ejs', { games: [] });
 });
 
-app.post('/search', async (req, res) => {
+app.post('/search', isUserAuthenticated, async (req, res) => {
     let gameName = req.body.gameName;
     console.log(gameName);
     const gameMap = new Map();
@@ -140,7 +140,7 @@ app.post('/search', async (req, res) => {
     res.render('search.ejs', { games, gameMap });
 });
 
-app.get('/wishlist', async (req, res) => {
+app.get('/wishlist', isUserAuthenticated, async (req, res) => {
     const userID = req.session.userID;
 
     if (!userID) {
@@ -156,7 +156,7 @@ app.get('/wishlist', async (req, res) => {
     res.render('wishlist.ejs', { wishlist });
 });
 
-app.get('/signUp', (req, res) => {
+app.get('/signUp', async (req, res) => {
     res.render('signUp.ejs');
 });
 
@@ -170,7 +170,7 @@ app.post('/signUp', async (req, res) => {
     res.redirect('/login');
 });
 
-app.get('/addFriends', async (req, res) => {
+app.get('/addFriends', isUserAuthenticated, async (req, res) => {
     const userID = req.session.userID;
 
     const sql = `SELECT userID, username, firstName, lastName
@@ -181,7 +181,7 @@ app.get('/addFriends', async (req, res) => {
     res.render('addFriends.ejs', { users });
 });
 
-app.post('/addFriends', async (req, res) => {
+app.post('/addFriends', isUserAuthenticated, async (req, res) => {
     const userID = req.session.userID;
     const friendUserID = req.body.friendUserID;
 
@@ -192,7 +192,7 @@ app.post('/addFriends', async (req, res) => {
     res.redirect('/friends');
 });
 
-app.get('/friends', async (req, res) => {
+app.get('/friends', isUserAuthenticated, async (req, res) => {
     const userID = req.session.userID;
 
     const sql = `SELECT u.userID, u.username, u.firstName, u.lastName
@@ -204,11 +204,11 @@ app.get('/friends', async (req, res) => {
     res.render('friends.ejs', { friends });
 });
 
-app.get('/addGame', (req, res) => {
+app.get('/addGame', isUserAuthenticated, async (req, res) => {
     res.render('addGame.ejs');
 });
 
-app.post('/addToWishlist', async (req, res) => {
+app.post('/addToWishlist', isUserAuthenticated, async (req, res) => {
     const userID = req.session.userID;
 
     if (!userID) {
@@ -231,11 +231,11 @@ app.post('/addToWishlist', async (req, res) => {
     res.redirect('/wishlist');
 });
 
-app.get('/friendsWishlist', (req, res) => {
+app.get('/friendsWishlist', isUserAuthenticated, async (req, res) => {
     res.render('friendsWishlist.ejs', { wishlist: [] });
 });
 
-app.get('/friendsWishlist/:friendUserID', async (req, res) => {
+app.get('/friendsWishlist/:friendUserID', isUserAuthenticated, async (req, res) => {
     const friendUserID = req.params.friendUserID;
 
     const sql = `SELECT g.gameID, g.title, g.genre, g.likes
@@ -247,11 +247,11 @@ app.get('/friendsWishlist/:friendUserID', async (req, res) => {
     res.render('friendsWishlist.ejs', { friendUserID, wishlist });
 });
 
-app.get('/aISearch', async (req, res) => {
+app.get('/aISearch', isUserAuthenticated, async (req, res) => {
     res.render('aISearch.ejs', { games: [] });
 });
 
-app.post('/aISearch', async (req, res) => {
+app.post('/aISearch', isUserAuthenticated, async (req, res) => {
     let prompt = `You are a very concise agent that only returns the names of 
         games in a JSON Format with a max length of 3. No matter what 
         the contents of the search are, return game names in a JSON array format and do nothing else.
@@ -336,15 +336,15 @@ app.post('/aISearch', async (req, res) => {
 
 });
 
-app.get('/login', (req, res) => {
+app.get('/login', async (req, res) => {
     res.render('login.ejs');
 });
 
-app.get('/profile', (req, res) => {
+app.get('/profile', isUserAuthenticated, async (req, res) => {
     res.render('profile.ejs');
 });
 
-app.get('/logout', (req, res) => {
+app.get('/logout', isUserAuthenticated, async (req, res) => {
     req.session.destroy();
     res.redirect('/login');
 });
@@ -380,8 +380,6 @@ app.post('/loginProcess', async (req, res) => {
 });
 
 // app.get('/apiTest', async (req, res) => {
-//     let client_id = "3zzzpcewhkvs4yvk9v2117i0xqqviq";
-//     let client_secret = "nks9vjjfiq7g0ql2gyf6wjf4r29sry";
 //     // grant_type = client_credentials
 
 //     let url = "https://id.twitch.tv/oauth2/token";
@@ -399,23 +397,21 @@ app.post('/loginProcess', async (req, res) => {
 // });
 
 
-app.get('/gameTest', async (req, res) => {
-    let client_id = "3zzzpcewhkvs4yvk9v2117i0xqqviq";
-    let client_secret = "nks9vjjfiq7g0ql2gyf6wjf4r29sry";
-    // grant_type = client_credentials
+// app.get('/gameTest', async (req, res) => {
+//     // grant_type = client_credentials
 
-    let url = "https://api.igdb.com/v4/games";
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
-        body: "fields *;"
-    });
+//     let url = "https://api.igdb.com/v4/games";
+//     const response = await fetch(url, {
+//         method: "POST",
+//         headers: { "Client-ID": process.env.CLIENT_ID, "Authorization": "Bearer " + token },
+//         body: "fields *;"
+//     });
 
-    const game = await response.json();
-    res.send(game);
-});
+//     const game = await response.json();
+//     res.send(game);
+// });
 
-app.get('/gameSearch', async (req, res) => {
+app.get('/gameSearch', isUserAuthenticated, async (req, res) => {
 
     let gameName = req.query.game;
     let covIds = [];
@@ -475,7 +471,7 @@ app.get('/gameSearch', async (req, res) => {
     res.render('gameSearch.ejs', { game, gameMap });
 });
 
-app.get('/gameInfo', async (req, res) => {
+app.get('/gameInfo', isUserAuthenticated, async (req, res) => {
 
     let gameId = req.query.game;
 
@@ -513,7 +509,7 @@ app.get('/gameInfo', async (req, res) => {
     res.render('gameInfo.ejs', { game, finalCover, screenshots });
 });
 
-app.get('/deleteGame', async (req, res) => {
+app.get('/deleteGame', isUserAuthenticated, async (req, res) => {
     const userID = req.session.userID;
 
     if (!userID) {
