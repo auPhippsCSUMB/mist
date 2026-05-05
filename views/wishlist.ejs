@@ -18,9 +18,10 @@
 					<tbody>
 						<% wishlist.forEach(game => { %>
 							<tr>
-								<td><strong><%= game.title %></strong></td>
+								<td><a href="/gameInfo?game=<%=game.gameID%>"><strong><%= game.title %></strong></a></td>
 								<td class="text-muted"><%= game.genre %></td>
 								<td><span class="badge text-bg-secondary"><%= game.likes %></span></td>
+								<td><a href="/deleteGame?game=<%=game.gameID%>"><strong>Remove</strong></a></td>
 							</tr>
 						<% }) %>
 					</tbody>
