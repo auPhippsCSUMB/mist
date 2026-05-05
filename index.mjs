@@ -157,10 +157,12 @@ app.get('/signUp', (req, res) => {
 app.post('/signUp', async (req, res) => {
     const { username, password, firstName, lastName } = req.body;
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const sql = `INSERT INTO mistusers (username, password, firstName, lastName)
                  VALUES (?, ?, ?, ?)`;
 
-    await pool.query(sql, [username, password, firstName, lastName]);
+    await pool.query(sql, [username, hashedPassword, firstName, lastName]);
     res.redirect('/login');
 });
 
@@ -323,8 +325,74 @@ app.get('/login', (req, res) => {
     res.render('login.ejs');
 });
 
-app.get('/profile', (req, res) => {
-    res.render('profile.ejs');
+app.get('/profile', async (req, res) => {
+    const userID = req.session.userID;
+
+    const userSql = `SELECT userID, username, firstName, lastName
+                     FROM mistusers
+                     WHERE userID = ?`;
+
+    const friendSql = `SELECT COUNT(*) AS friendCount
+                       FROM mistfriends
+                       WHERE userID = ?`;
+
+    const wishlistSql = `SELECT g.gameID, g.title, g.genre, g.likes
+                         FROM mistwishlist w
+                         JOIN mistgames g ON w.gameID = g.gameID
+                         WHERE w.userID = ?`;
+
+    const [userRows] = await pool.query(userSql, [userID]);
+
+    const [friendRows] = await pool.query(friendSql, [userID]);
+
+    const [wishlist] = await pool.query(wishlistSql, [userID]);
+
+    if (userRows.length === 0) {
+        return res.redirect('/login');
+    }
+
+    res.render('profile.ejs', {userInfo: userRows[0], friendCount: friendRows[0].friendCount, wishlist, error: null});
+});
+
+app.get('/editProfile', async (req, res) => {
+    const userID = req.session.userID;
+    
+    const userSql = `SELECT userID, username, firstName, lastName
+                     FROM mistusers
+                     WHERE userID = ?`;
+    
+    const [userRows] = await pool.query(userSql, [userID]);
+
+    if (userRows.length === 0) {
+        return res.redirect('/login');
+    }
+
+    res.render('editProfile.ejs', { userInfo: userRows[0], error: null });
+});
+
+app.post('/editProfile', async (req, res) => {
+    const userID = req.session.userID;
+    const { username, firstName, lastName } = req.body;
+
+    const checkSql = `SELECT userID
+                      FROM mistusers
+                      WHERE username = ? AND userID != ?`;
+
+    const [existingUsers] = await pool.query(checkSql, [username, userID]);
+    
+    if (existingUsers.length > 0) {
+        return res.render('editProfile.ejs', { userInfo: { userID, username, firstName, lastName }, error: "Username already taken" });
+    }
+
+    const updateSql = `UPDATE mistusers
+                       SET username = ?, firstName = ?, lastName = ?
+                       WHERE userID = ?`;
+
+    await pool.query(updateSql, [username, firstName, lastName, userID]);
+    
+    req.session.fullName = firstName + " " + lastName;
+
+    res.redirect('/profile');
 });
 
 app.get('/logout', (req, res) => {
