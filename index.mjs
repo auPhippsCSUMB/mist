@@ -206,7 +206,6 @@ app.get('/friends', isUserAuthenticated, async (req, res) => {
     res.render('friends.ejs', { friends });
 });
 
-<<<<<<< HEAD
 app.post('/removeFriend', isUserAuthenticated, async (req, res) => {
     const userID = req.session.userID;
 
@@ -221,9 +220,6 @@ app.post('/removeFriend', isUserAuthenticated, async (req, res) => {
 });
 
 app.get('/addGame', (req, res) => {
-=======
-app.get('/addGame', isUserAuthenticated, async (req, res) => {
->>>>>>> main
     res.render('addGame.ejs');
 });
 
@@ -363,7 +359,6 @@ app.get('/login', async (req, res) => {
     res.render('login.ejs');
 });
 
-<<<<<<< HEAD
 app.get('/profile', async (req, res) => {
     const userID = req.session.userID;
 
@@ -432,10 +427,6 @@ app.post('/editProfile', async (req, res) => {
     req.session.fullName = firstName + " " + lastName;
 
     res.redirect('/profile');
-=======
-app.get('/profile', isUserAuthenticated, async (req, res) => {
-    res.render('profile.ejs');
->>>>>>> main
 });
 
 app.get('/logout', isUserAuthenticated, async (req, res) => {
