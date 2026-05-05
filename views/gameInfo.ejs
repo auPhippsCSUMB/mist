@@ -1,11 +1,11 @@
 <%- include('partials/head', { title: game[0].name }) %>
     <div class="card soft-card">
-        <div class="card-body p-4 p-md-5">
+        <div class="container mh-50 overflow-hidden card-body p-4 p-md-5">
             <div class="row">
                 <div class="col">
                     <% if (finalCover[0]) { %>
                     <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<%=finalCover[0].image_id%>.jpg" class="d-block"
-                        width="300">
+                        width="400">
                     <% } else { %>
                         <img src="" alt="No Image Available" class="d-block"
                         width="300">
@@ -21,8 +21,11 @@
                     <h2><%=game[0].rating_count%> Reviews
                     </h2>
                     <br>
-                    <p><%=game[0].storyline%>
+                    <h2>Description</h2>
+                    <hr>
+                    <p style="max-height: 200px; overflow-y: scroll;"><%=game[0].storyline%>
                     </p>
+                    <hr>
                 </div>
             </div>
             <hr>
